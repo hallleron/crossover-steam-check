@@ -14,8 +14,10 @@ in einer hübschen, sortier-/filterbaren Karten-Liste.
 - 📊 Live-Übersicht der Verteilung deiner Bibliothek
 - 🔤 Filter nach Rating + Volltext-Suche, Sortierung nach Rating, Spielzeit oder
   Name
-- ⚡ Server-seitiges Caching der CrossOver-Lookups (24 h), damit die
-  CodeWeavers-Seite nicht unnötig getroffen wird
+- ⚡ Persistenter Cache der CrossOver-Lookups in `.cache/crossover.json`
+  mit 7-Tage-Stale-While-Revalidate: einmal aufgelöste Titel überleben
+  Server-Restarts, alte Einträge werden sofort ausgeliefert und im
+  Hintergrund aufgefrischt
 
 ## Voraussetzungen
 
@@ -48,9 +50,15 @@ CodeWeavers bietet keine offizielle JSON-API. Der Scraper in
 4. liest, falls nötig, die Detailseite und klassifiziert das Medaillen-Rating
    (Gold/Silver/Bronze/...).
 
-Ergebnisse werden 24 h im Speicher gecacht. Wenn die Markup-Struktur sich
-ändert, sind die Selektoren in `parseSearchResults` / `parseAppPage`
-absichtlich locker — typischerweise reicht ein kleiner Patch dort.
+Ergebnisse werden in `.cache/crossover.json` persistiert. Einträge gelten
+7 Tage als frisch; ältere Einträge werden sofort aus dem Cache geliefert
+und parallel im Hintergrund neu geholt (Stale-While-Revalidate).
+Concurrent-Requests für denselben Titel werden dedupliziert. Cache
+löschen: `rm .cache/crossover.json`.
+
+Wenn die Markup-Struktur sich ändert, sind die Selektoren in
+`parseSearchResults` / `parseAppPage` absichtlich locker — typischerweise
+reicht ein kleiner Patch dort.
 
 ## Endpoints
 

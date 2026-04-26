@@ -1,0 +1,19 @@
+{
+  "name": "crossover-steam-check",
+  "version": "1.0.0",
+  "description": "Web app that reads a Steam library and checks Mac CrossOver compatibility via the CodeWeavers compatibility database.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

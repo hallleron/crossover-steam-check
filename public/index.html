@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CrossOver Mac Check für deine Steam-Bibliothek</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>🍏 CrossOver Mac Check</h1>
+      <p class="tagline">
+        Lies deine Steam-Bibliothek aus und prüfe pro Spiel, ob es laut
+        CodeWeavers-DB unter
+        <a
+          href="https://www.codeweavers.com/crossover"
+          target="_blank"
+          rel="noopener"
+          >CrossOver auf dem Mac</a
+        >
+        läuft.
+      </p>
+    </header>
+
+    <main>
+      <form id="form" class="lookup">
+        <label for="user">Steam ID, Vanity-Name oder Profil-URL</label>
+        <div class="row">
+          <input
+            id="user"
+            name="user"
+            type="text"
+            required
+            placeholder="z.B. gabelogannewell, 76561197960287930 oder steamcommunity.com/id/..."
+            autocomplete="off"
+          />
+          <button id="submit" type="submit">Bibliothek prüfen</button>
+        </div>
+        <p class="hint">
+          Dein Steam-Profil <strong>und</strong> die Spieledetails müssen auf
+          „Öffentlich" gestellt sein.
+        </p>
+      </form>
+
+      <section id="status" class="status" hidden></section>
+
+      <section id="summary" class="summary" hidden>
+        <div class="summary-grid"></div>
+      </section>
+
+      <section id="controls" class="controls" hidden>
+        <input
+          id="filterText"
+          type="search"
+          placeholder="Spiele filtern…"
+          autocomplete="off"
+        />
+        <div class="filters">
+          <label
+            ><input type="checkbox" data-rating="gold" checked /> Gold</label
+          >
+          <label
+            ><input type="checkbox" data-rating="silver" checked /> Silver</label
+          >
+          <label
+            ><input type="checkbox" data-rating="bronze" checked /> Bronze</label
+          >
+          <label
+            ><input type="checkbox" data-rating="honorable" checked /> Honorable</label
+          >
+          <label
+            ><input type="checkbox" data-rating="limited" checked /> Limited</label
+          >
+          <label
+            ><input type="checkbox" data-rating="untested" checked />
+            Untested</label
+          >
+          <label
+            ><input type="checkbox" data-rating="wont-run" checked /> Won't
+            Run</label
+          >
+          <label
+            ><input type="checkbox" data-rating="unknown" checked />
+            Unbekannt</label
+          >
+        </div>
+        <select id="sort">
+          <option value="rating">Sortieren: nach CrossOver-Rating</option>
+          <option value="playtime">Sortieren: nach Spielzeit</option>
+          <option value="name">Sortieren: alphabetisch</option>
+        </select>
+      </section>
+
+      <ul id="games" class="games"></ul>
+    </main>
+
+    <footer>
+      <p>
+        Daten: <a href="https://store.steampowered.com" target="_blank" rel="noopener">Steam</a> ·
+        <a href="https://www.codeweavers.com/compatibility" target="_blank" rel="noopener">CodeWeavers Compatibility DB</a>.
+        Diese Seite ist nicht mit Valve oder CodeWeavers verbunden.
+      </p>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

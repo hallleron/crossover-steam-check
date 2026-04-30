@@ -1,22 +1,18 @@
 const RATING_ORDER = [
-  'gold',
-  'silver',
-  'bronze',
-  'honorable',
+  'runs-great',
+  'runs-well',
   'limited',
-  'untested',
   'wont-run',
+  'untested',
   'unknown',
 ];
 
 const RATING_LABELS = {
-  gold: 'Gold',
-  silver: 'Silver',
-  bronze: 'Bronze',
-  honorable: 'Honorable Mention',
-  limited: 'Limited',
-  untested: 'Untested',
+  'runs-great': 'Runs Great',
+  'runs-well': 'Runs Well',
+  limited: 'Limited Functionality',
   'wont-run': "Won't Run",
+  untested: 'Untested',
   unknown: 'Unbekannt',
 };
 

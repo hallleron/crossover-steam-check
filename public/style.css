@@ -7,13 +7,11 @@
   --accent: #66c0f4;
   --border: #242a38;
 
-  --gold: #f5c518;
-  --silver: #c0c4cc;
-  --bronze: #cd7f32;
-  --honorable: #b388ff;
+  --runs-great: #2fbf71;
+  --runs-well: #b6d957;
   --limited: #ffa630;
-  --untested: #6c7a93;
   --wont: #e74c3c;
+  --untested: #6c7a93;
   --unknown: #4a5366;
 }
 
@@ -269,29 +267,22 @@ main {
   background: #0d0f14;
   opacity: 0.45;
 }
-.badge.gold {
-  background: var(--gold);
+.badge.runs-great {
+  background: var(--runs-great);
+  color: #06140b;
 }
-.badge.silver {
-  background: var(--silver);
-}
-.badge.bronze {
-  background: var(--bronze);
-  color: #fff;
-}
-.badge.honorable {
-  background: var(--honorable);
-  color: #fff;
+.badge.runs-well {
+  background: var(--runs-well);
 }
 .badge.limited {
   background: var(--limited);
 }
-.badge.untested {
-  background: var(--untested);
-  color: #fff;
-}
 .badge.wont-run {
   background: var(--wont);
+  color: #fff;
+}
+.badge.untested {
+  background: var(--untested);
   color: #fff;
 }
 .badge.unknown {
@@ -306,26 +297,20 @@ main {
   background: var(--unknown);
   display: inline-block;
 }
-.dot.gold {
-  background: var(--gold);
+.dot.runs-great {
+  background: var(--runs-great);
 }
-.dot.silver {
-  background: var(--silver);
-}
-.dot.bronze {
-  background: var(--bronze);
-}
-.dot.honorable {
-  background: var(--honorable);
+.dot.runs-well {
+  background: var(--runs-well);
 }
 .dot.limited {
   background: var(--limited);
 }
-.dot.untested {
-  background: var(--untested);
-}
 .dot.wont-run {
   background: var(--wont);
+}
+.dot.untested {
+  background: var(--untested);
 }
 .dot.unknown {
   background: var(--unknown);

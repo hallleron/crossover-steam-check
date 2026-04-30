@@ -244,7 +244,7 @@ form.addEventListener('submit', async (e) => {
     controlsEl.hidden = false;
     renderAll();
 
-    await runWithLimit(state.games, 4, fetchCompat);
+    await runWithLimit(state.games, 2, fetchCompat);
 
     setStatus(
       `Fertig: ${state.games.length} Spiele aus der Steam-Bibliothek geprüft.`,

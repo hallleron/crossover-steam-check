@@ -8,6 +8,7 @@ import {
   lookupCompatibility,
   ratingLabel,
   ratingRank,
+  diagnose,
 } from './lib/crossover.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,6 +43,15 @@ app.get('/api/compat', async (req, res) => {
     source: result.source,
     matchedName: result.matchedName,
   });
+});
+
+app.get('/api/compat/debug', async (req, res) => {
+  const name = (req.query.name || '').toString();
+  if (!name) {
+    res.status(400).json({ error: 'Missing "name" parameter' });
+    return;
+  }
+  res.json(await diagnose(name));
 });
 
 const port = Number(process.env.PORT) || 3000;

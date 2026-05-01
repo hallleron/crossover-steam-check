@@ -5,6 +5,8 @@ Read your Steam library and check, game by game, whether each title runs on
 [CodeWeavers compatibility database](https://www.codeweavers.com/compatibility).
 Results land in a sortable, filterable card list.
 
+![Screenshot](docs/screenshot.png)
+
 ## Features
 
 - Load a Steam library by vanity name, SteamID64, or full profile URL

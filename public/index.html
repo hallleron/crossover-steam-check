@@ -1,44 +1,43 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CrossOver Mac Check für deine Steam-Bibliothek</title>
+    <title>CrossOver Mac Check for your Steam library</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <header class="hero">
-      <h1>🍏 CrossOver Mac Check</h1>
+      <h1>CrossOver Mac Check</h1>
       <p class="tagline">
-        Lies deine Steam-Bibliothek aus und prüfe pro Spiel, ob es laut
-        CodeWeavers-DB unter
+        Pull your Steam library and check, game by game, whether it runs on
         <a
           href="https://www.codeweavers.com/crossover"
           target="_blank"
           rel="noopener"
-          >CrossOver auf dem Mac</a
+          >CrossOver on macOS</a
         >
-        läuft.
+        according to the CodeWeavers compatibility database.
       </p>
     </header>
 
     <main>
       <form id="form" class="lookup">
-        <label for="user">Steam ID, Vanity-Name oder Profil-URL</label>
+        <label for="user">Steam ID, vanity name, or profile URL</label>
         <div class="row">
           <input
             id="user"
             name="user"
             type="text"
             required
-            placeholder="z.B. gabelogannewell, 76561197960287930 oder steamcommunity.com/id/..."
+            placeholder="e.g. gabelogannewell, 76561197960287930, or steamcommunity.com/id/..."
             autocomplete="off"
           />
-          <button id="submit" type="submit">Bibliothek prüfen</button>
+          <button id="submit" type="submit">Check library</button>
         </div>
         <p class="hint">
-          Dein Steam-Profil <strong>und</strong> die Spieledetails müssen auf
-          „Öffentlich" gestellt sein.
+          Your Steam profile <strong>and</strong> game details must be set to
+          "Public".
         </p>
       </form>
 
@@ -52,7 +51,7 @@
         <input
           id="filterText"
           type="search"
-          placeholder="Spiele filtern…"
+          placeholder="Filter games…"
           autocomplete="off"
         />
         <div class="filters">
@@ -78,13 +77,13 @@
           >
           <label
             ><input type="checkbox" data-rating="unknown" checked />
-            Unbekannt</label
+            Unknown</label
           >
         </div>
         <select id="sort">
-          <option value="rating">Sortieren: nach CrossOver-Rating</option>
-          <option value="playtime">Sortieren: nach Spielzeit</option>
-          <option value="name">Sortieren: alphabetisch</option>
+          <option value="rating">Sort: by CrossOver rating</option>
+          <option value="playtime">Sort: by playtime</option>
+          <option value="name">Sort: alphabetically</option>
         </select>
       </section>
 
@@ -93,9 +92,9 @@
 
     <footer>
       <p>
-        Daten: <a href="https://store.steampowered.com" target="_blank" rel="noopener">Steam</a> ·
+        Data: <a href="https://store.steampowered.com" target="_blank" rel="noopener">Steam</a> ·
         <a href="https://www.codeweavers.com/compatibility" target="_blank" rel="noopener">CodeWeavers Compatibility DB</a>.
-        Diese Seite ist nicht mit Valve oder CodeWeavers verbunden.
+        This site is not affiliated with Valve or CodeWeavers.
       </p>
     </footer>
 

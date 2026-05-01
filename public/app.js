@@ -13,7 +13,7 @@ const RATING_LABELS = {
   limited: 'Limited Functionality',
   'wont-run': "Won't Run",
   untested: 'Untested',
-  unknown: 'Unbekannt',
+  unknown: 'Unknown',
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -47,7 +47,7 @@ function setStatus(message, kind = 'info') {
 }
 
 function fmtPlaytime(min) {
-  if (!min) return 'noch nie gespielt';
+  if (!min) return 'never played';
   if (min < 60) return `${min} min`;
   const h = Math.round((min / 60) * 10) / 10;
   return `${h} h`;
@@ -63,11 +63,11 @@ function gameCard(game) {
 
   const badgeLabel =
     c.status === 'loading'
-      ? '<span class="spinner"></span>Prüfe…'
-      : c.label || RATING_LABELS[c.rating] || 'Unbekannt';
+      ? '<span class="spinner"></span>Checking…'
+      : c.label || RATING_LABELS[c.rating] || 'Unknown';
 
   const sourceLink = c.source
-    ? `<a href="${c.source}" target="_blank" rel="noopener">CrossOver-Eintrag</a>`
+    ? `<a href="${c.source}" target="_blank" rel="noopener">CrossOver entry</a>`
     : '';
 
   li.innerHTML = `
@@ -83,7 +83,7 @@ function gameCard(game) {
       <span class="badge ${c.rating}">${badgeLabel}</span>
       <div class="meta">
         <span>⏱ ${fmtPlaytime(game.playtimeMinutes)}</span>
-        <span>App-ID ${game.appid}</span>
+        <span>App ID ${game.appid}</span>
       </div>
       <div class="links">
         <a href="${game.storeUrl}" target="_blank" rel="noopener">Steam</a>
@@ -174,7 +174,7 @@ function applyFilters() {
 async function fetchCompat(game) {
   state.compat.set(game.appid, {
     rating: 'unknown',
-    label: 'Prüfe…',
+    label: 'Checking…',
     rank: 99,
     status: 'loading',
   });
@@ -185,7 +185,7 @@ async function fetchCompat(game) {
     const json = await res.json();
     state.compat.set(game.appid, {
       rating: json.rating || 'unknown',
-      label: json.label || RATING_LABELS[json.rating] || 'Unbekannt',
+      label: json.label || RATING_LABELS[json.rating] || 'Unknown',
       rank: typeof json.rank === 'number' ? json.rank : 99,
       source: json.source || null,
       matchedName: json.matchedName || null,
@@ -194,7 +194,7 @@ async function fetchCompat(game) {
   } catch {
     state.compat.set(game.appid, {
       rating: 'unknown',
-      label: 'Fehler',
+      label: 'Error',
       rank: 99,
       status: 'error',
     });
@@ -218,7 +218,7 @@ form.addEventListener('submit', async (e) => {
   const user = userInput.value.trim();
   if (!user) return;
   submitBtn.disabled = true;
-  setStatus('<span class="spinner"></span>Lade Steam-Bibliothek…');
+  setStatus('<span class="spinner"></span>Loading Steam library…');
   list.innerHTML = '';
   controlsEl.hidden = true;
   summaryEl.hidden = true;
@@ -231,11 +231,11 @@ form.addEventListener('submit', async (e) => {
     if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
     state.games = json.games || [];
     if (!state.games.length) {
-      setStatus('Keine Spiele gefunden.', 'error');
+      setStatus('No games found.', 'error');
       return;
     }
     setStatus(
-      `<span class="spinner"></span>${state.games.length} Spiele geladen — prüfe CrossOver-Kompatibilität…`,
+      `<span class="spinner"></span>${state.games.length} games loaded — checking CrossOver compatibility…`,
     );
     controlsEl.hidden = false;
     renderAll();
@@ -243,7 +243,7 @@ form.addEventListener('submit', async (e) => {
     await runWithLimit(state.games, 2, fetchCompat);
 
     setStatus(
-      `Fertig: ${state.games.length} Spiele aus der Steam-Bibliothek geprüft.`,
+      `Done: checked ${state.games.length} games from your Steam library.`,
     );
     renderAll();
     applyFilters();

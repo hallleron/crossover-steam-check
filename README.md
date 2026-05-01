@@ -1,106 +1,108 @@
-# CrossOver Mac Check für deine Steam-Bibliothek
+# CrossOver Mac Check for your Steam library
 
-Kleine Web-App, die deine (öffentliche) Steam-Bibliothek über die Steam Web API
-ausliest und für jedes Spiel in der
-[CodeWeavers-Compatibility-DB](https://www.codeweavers.com/compatibility)
-nachschlägt, wie gut es unter **CrossOver auf macOS** läuft. Ergebnisse landen
-in einer hübschen, sortier-/filterbaren Karten-Liste.
+Small web app that pulls your (public) Steam library via the Steam Web
+API and looks up each game in the
+[CodeWeavers compatibility database](https://www.codeweavers.com/compatibility)
+to see how well it runs under **CrossOver on macOS**. Results land in a
+sortable, filterable card list.
 
 ## Features
 
-- 🔎 Steam-Library laden per Vanity-Name, SteamID64 oder Profil-URL
-- 🥇 CrossOver-Rating pro Spiel: Runs Great / Runs Well / Limited
+- Load your Steam library by vanity name, SteamID64, or profile URL
+- Per-game CrossOver rating: Runs Great / Runs Well / Limited
   Functionality / Won't Run / Untested
-- 📊 Live-Übersicht der Verteilung deiner Bibliothek
-- 🔤 Filter nach Rating + Volltext-Suche, Sortierung nach Rating, Spielzeit oder
-  Name
-- ⚡ Persistenter Cache der CrossOver-Lookups in `.cache/crossover.json`
-  mit 7-Tage-Stale-While-Revalidate: einmal aufgelöste Titel überleben
-  Server-Restarts, alte Einträge werden sofort ausgeliefert und im
-  Hintergrund aufgefrischt
+- Live distribution summary across your library
+- Rating filters + full-text search, sort by rating, playtime, or name
+- Persistent CrossOver lookup cache in `.cache/crossover.json` with
+  7-day stale-while-revalidate: once-resolved titles survive server
+  restarts; older entries are served immediately and refreshed in the
+  background
 
-## Voraussetzungen
+## Requirements
 
-- Node.js ≥ 18 (für eingebautes `fetch`)
-- Steam Web API Key — kostenlos unter
+- Node.js ≥ 18 (for built-in `fetch`)
+- Steam Web API key — free at
   <https://steamcommunity.com/dev/apikey>
-- Dein Steam-Profil **und** die Spieldetails müssen auf „Öffentlich" stehen,
-  sonst gibt die Steam-API keine Daten heraus.
+- Your Steam profile **and** game details must be set to "Public",
+  otherwise the Steam API returns no data.
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env
-# STEAM_API_KEY=... in .env eintragen
+# put STEAM_API_KEY=... into .env
 npm start
 ```
 
-Dann <http://localhost:3000> öffnen.
+Then open <http://localhost:3000>.
 
-## Im Container betreiben
+## Running in a container
 
-Das Image ist OCI-Standard und damit sowohl mit **Docker** als auch mit
-Apples neuer **`container`**-CLI (macOS 26+, Apple Silicon) kompatibel.
+The image is plain OCI and works with **Docker** as well as Apple's new
+**`container`** CLI (macOS 26+, Apple Silicon).
 
-### Bauen
+### Build
 
 ```bash
 docker build -t crossover-steam-check .
-# oder
+# or
 container build -t crossover-steam-check .
 ```
 
-### Starten
+### Run
 
 ```bash
 docker run --rm -p 3000:3000 \
-  -e STEAM_API_KEY=dein_key_hier \
+  -e STEAM_API_KEY=your_key_here \
   -v crossover_cache:/app/.cache \
   crossover-steam-check
 ```
 
-Mit Apples `container`-CLI exakt analog:
+With Apple's `container` CLI, identical syntax:
 
 ```bash
 container run --rm -p 3000:3000 \
-  -e STEAM_API_KEY=dein_key_hier \
+  -e STEAM_API_KEY=your_key_here \
   -v crossover_cache:/app/.cache \
   crossover-steam-check
 ```
 
-Das Volume `crossover_cache` (oder ein Bind-Mount nach Wahl) sichert
-den Lookup-Cache über Container-Restarts hinweg.
+The `crossover_cache` volume (or a bind mount of your choice) preserves
+the lookup cache across container restarts.
 
-## Wie das CrossOver-Lookup funktioniert
+## How the CrossOver lookup works
 
-CodeWeavers bietet keine offizielle JSON-API. Der Scraper in
+CodeWeavers does not publish an official JSON API. The scraper in
 `lib/crossover.js`:
 
-1. ruft die Suchseite `https://www.codeweavers.com/compatibility?name=<spiel>`
-   ab,
-2. extrahiert Treffer-Links (`/compatibility/crossover/<slug>`),
-3. wählt den ähnlichsten Treffer (exakte/Substring-/Token-Matches),
-4. liest die Detailseite und extrahiert das Verdict aus
-   `.appdb-rating-box` (Runs Great / Runs Well / Limited Functionality /
-   Won't Run / Untested).
+1. fetches the search page
+   `https://www.codeweavers.com/compatibility?name=<game>`,
+2. extracts hit links (`/compatibility/crossover/<slug>`),
+3. picks the closest match (exact / substring / token overlap),
+4. loads the detail page and extracts the verdict from
+   `.appdb-rating-box` (Runs Great / Runs Well / Limited Functionality
+   / Won't Run / Untested).
 
-Ergebnisse werden in `.cache/crossover.json` persistiert. Einträge gelten
-7 Tage als frisch; ältere Einträge werden sofort aus dem Cache geliefert
-und parallel im Hintergrund neu geholt (Stale-While-Revalidate).
-Concurrent-Requests für denselben Titel werden dedupliziert. Cache
-löschen: `rm .cache/crossover.json`.
+Results are persisted in `.cache/crossover.json`. Entries are
+considered fresh for 7 days; older entries are served from the cache
+immediately and refreshed in parallel in the background
+(stale-while-revalidate). Concurrent requests for the same title are
+deduplicated. Clear the cache with `rm .cache/crossover.json`.
 
-Wenn die Markup-Struktur sich ändert, sind die Selektoren in
-`parseSearchResults` / `parseAppPage` absichtlich locker — typischerweise
-reicht ein kleiner Patch dort.
+If the page markup changes, the selectors in `parseSearchResults` /
+`parseAppPage` are intentionally loose — usually a small patch there
+is enough.
 
 ## Endpoints
 
-- `GET /api/library?user=<vanity|steamid64|profile-url>` → Spieleliste
+- `GET /api/library?user=<vanity|steamid64|profile-url>` → game list
 - `GET /api/compat?name=<game-name>` → `{ rating, label, source, matchedName }`
+- `GET /api/compat/debug?name=<game-name>` → diagnostic dump (search
+  HTML head, parsed candidates, chosen match, app-page probe) for
+  reverse-engineering selectors when CodeWeavers' markup changes
 
-## Hinweis
+## Disclaimer
 
-Diese App ist nicht mit Valve, Steam oder CodeWeavers verbunden. Sie nutzt nur
-öffentlich zugängliche Endpunkte bzw. die öffentliche Compatibility-Seite.
+This app is not affiliated with Valve, Steam, or CodeWeavers. It only
+uses publicly accessible endpoints / the public compatibility pages.

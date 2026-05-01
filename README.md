@@ -9,8 +9,8 @@ in einer hübschen, sortier-/filterbaren Karten-Liste.
 ## Features
 
 - 🔎 Steam-Library laden per Vanity-Name, SteamID64 oder Profil-URL
-- 🥇 CrossOver-Rating pro Spiel: Gold / Silver / Bronze / Honorable / Limited /
-  Untested / Won't Run
+- 🥇 CrossOver-Rating pro Spiel: Runs Great / Runs Well / Limited
+  Functionality / Won't Run / Untested
 - 📊 Live-Übersicht der Verteilung deiner Bibliothek
 - 🔤 Filter nach Rating + Volltext-Suche, Sortierung nach Rating, Spielzeit oder
   Name
@@ -38,6 +38,40 @@ npm start
 
 Dann <http://localhost:3000> öffnen.
 
+## Im Container betreiben
+
+Das Image ist OCI-Standard und damit sowohl mit **Docker** als auch mit
+Apples neuer **`container`**-CLI (macOS 26+, Apple Silicon) kompatibel.
+
+### Bauen
+
+```bash
+docker build -t crossover-steam-check .
+# oder
+container build -t crossover-steam-check .
+```
+
+### Starten
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e STEAM_API_KEY=dein_key_hier \
+  -v crossover_cache:/app/.cache \
+  crossover-steam-check
+```
+
+Mit Apples `container`-CLI exakt analog:
+
+```bash
+container run --rm -p 3000:3000 \
+  -e STEAM_API_KEY=dein_key_hier \
+  -v crossover_cache:/app/.cache \
+  crossover-steam-check
+```
+
+Das Volume `crossover_cache` (oder ein Bind-Mount nach Wahl) sichert
+den Lookup-Cache über Container-Restarts hinweg.
+
 ## Wie das CrossOver-Lookup funktioniert
 
 CodeWeavers bietet keine offizielle JSON-API. Der Scraper in
@@ -47,8 +81,9 @@ CodeWeavers bietet keine offizielle JSON-API. Der Scraper in
    ab,
 2. extrahiert Treffer-Links (`/compatibility/crossover/<slug>`),
 3. wählt den ähnlichsten Treffer (exakte/Substring-/Token-Matches),
-4. liest, falls nötig, die Detailseite und klassifiziert das Medaillen-Rating
-   (Gold/Silver/Bronze/...).
+4. liest die Detailseite und extrahiert das Verdict aus
+   `.appdb-rating-box` (Runs Great / Runs Well / Limited Functionality /
+   Won't Run / Untested).
 
 Ergebnisse werden in `.cache/crossover.json` persistiert. Einträge gelten
 7 Tage als frisch; ältere Einträge werden sofort aus dem Cache geliefert

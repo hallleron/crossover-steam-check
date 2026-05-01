@@ -158,6 +158,38 @@ in-memory only and the app keeps working).
 GitHub disabled HTTPS password auth in 2021. Use a Personal Access
 Token, the `gh` CLI (`gh auth login`), or SSH keys.
 
+## Security notes
+
+This is a small personal tool, not a hardened public service. If you
+plan to run it anywhere other than `localhost` on your own machine,
+read this section first.
+
+- **Steam API key** &mdash; the key is only used server-side and never
+  reaches the browser. Keep it that way: never commit `.env` (already
+  gitignored), never bake it into the image. If a key leaks, rotate
+  it at <https://steamcommunity.com/dev/apikey>.
+- **Network exposure** &mdash; `docker run -p 3000:3000 ...` binds the
+  host port to `0.0.0.0`, i.e. the app is reachable from anywhere on
+  your LAN. To restrict it to localhost only, use
+  `-p 127.0.0.1:3000:3000`.
+- **No rate limiting** &mdash; the API endpoints are unauthenticated and
+  unthrottled. That's fine for a single-user local tool. If you put
+  this behind a public hostname, add a rate limiter (e.g. nginx, a
+  reverse proxy, or `express-rate-limit`) before someone discovers
+  `/api/compat?name=...` and uses it as a free CodeWeavers proxy.
+- **Diagnostic endpoint** &mdash; `/api/compat/debug` returns scraped HTML
+  and internal parser state. It does not leak credentials, but it is
+  meant for the operator. Don't expose it on a public host without a
+  good reason.
+- **Container runs as root** &mdash; deliberate, see the troubleshooting
+  note above. Acceptable in Apple's `container` (each container is
+  its own VM); in Docker on Linux it's a slightly weaker default. If
+  this matters to you, switch back to `USER node` in the Dockerfile
+  and run `chown -R 1000:1000` on the cache volume after creation.
+- **Public Steam profiles only** &mdash; the app intentionally only works
+  with libraries the user has marked public. It can't see private
+  profiles, even your own.
+
 ## Disclaimer
 
 This project is not affiliated with Valve, Steam, or CodeWeavers. It
@@ -167,8 +199,4 @@ citizen &mdash; please don't tear it out.
 
 ## License
 
-No license file is included yet. Until one is added, default copyright
-applies (all rights reserved) and the project cannot legally be
-forked, redistributed, or contributed to. Add a `LICENSE` file (MIT
-and Apache-2.0 are both safe choices for small open-source projects)
-before publishing the repo if you want contributions.
+[MIT](LICENSE).

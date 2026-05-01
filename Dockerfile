@@ -12,16 +12,17 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000
 
-COPY --from=deps --chown=node:node /app/node_modules ./node_modules
-COPY --chown=node:node package.json server.js ./
-COPY --chown=node:node lib ./lib
-COPY --chown=node:node public ./public
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json server.js ./
+COPY lib ./lib
+COPY public ./public
+RUN mkdir -p /app/.cache
 
-# Pre-create the cache dir so the volume mount (or in-container writes)
-# work without root. The "node" user (uid 1000) ships with the base image.
-RUN mkdir -p /app/.cache && chown -R node:node /app/.cache
+# Runs as root on purpose. Apple's `container` provisions named volumes
+# as root-owned, and per-container VM isolation already separates the
+# container's root from the host. Switching to a non-root user here
+# would just break the cache mount with EACCES on common setups.
 
-USER node
 EXPOSE 3000
 VOLUME ["/app/.cache"]
 

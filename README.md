@@ -1,32 +1,84 @@
-# CrossOver Mac Check for your Steam library
+# CrossOver Mac Check
 
-Small web app that pulls your (public) Steam library via the Steam Web
-API and looks up each game in the
-[CodeWeavers compatibility database](https://www.codeweavers.com/compatibility)
-to see how well it runs under **CrossOver on macOS**. Results land in a
-sortable, filterable card list.
+Read your Steam library and check, game by game, whether each title runs on
+[CrossOver for macOS](https://www.codeweavers.com/crossover) according to the
+[CodeWeavers compatibility database](https://www.codeweavers.com/compatibility).
+Results land in a sortable, filterable card list.
 
 ## Features
 
-- Load your Steam library by vanity name, SteamID64, or profile URL
-- Per-game CrossOver rating: Runs Great / Runs Well / Limited
-  Functionality / Won't Run / Untested
-- Live distribution summary across your library
-- Rating filters + full-text search, sort by rating, playtime, or name
-- Persistent CrossOver lookup cache in `.cache/crossover.json` with
-  7-day stale-while-revalidate: once-resolved titles survive server
-  restarts; older entries are served immediately and refreshed in the
-  background
+- Load a Steam library by vanity name, SteamID64, or full profile URL
+- Per-game CrossOver verdict: **Runs Great** / **Runs Well** /
+  **Limited Functionality** / **Won't Run** / **Untested**
+- Live distribution summary across the library
+- Rating filters, full-text search, and sorting (rating / playtime / name)
+- Persistent disk cache with 7-day stale-while-revalidate so repeat runs
+  stay fast and don't hammer CodeWeavers
+- Built-in diagnostic endpoint for when CodeWeavers changes its markup
 
-## Requirements
+## Quick start (container)
 
-- Node.js ≥ 18 (for built-in `fetch`)
-- Steam Web API key — free at
-  <https://steamcommunity.com/dev/apikey>
-- Your Steam profile **and** game details must be set to "Public",
-  otherwise the Steam API returns no data.
+The image is plain OCI, so it works the same way under Docker and Apple's
+new `container` CLI (macOS 26+, Apple Silicon).
 
-## Setup
+### 1. Get a Steam Web API key
+
+Free and takes about 30 seconds: <https://steamcommunity.com/dev/apikey>
+(any domain like `localhost` works).
+
+### 2. Make your Steam profile public
+
+Steam &rarr; *Settings* &rarr; *Privacy* &rarr; set **My profile** and
+**Game details** to *Public*. The Steam Web API returns nothing
+otherwise.
+
+### 3. Clone, build, run
+
+```bash
+git clone https://github.com/hallleron/crossover-steam-check.git
+cd crossover-steam-check
+```
+
+**With Docker:**
+
+```bash
+docker build -t crossover-steam-check .
+docker run --rm -p 3000:3000 \
+  -e STEAM_API_KEY=your_key_here \
+  -v crossover_cache:/app/.cache \
+  crossover-steam-check
+```
+
+**With Apple's `container` CLI** (identical apart from the binary name):
+
+```bash
+container build -t crossover-steam-check .
+container run --rm -p 3000:3000 \
+  -e STEAM_API_KEY=your_key_here \
+  -v crossover_cache:/app/.cache \
+  crossover-steam-check
+```
+
+Open <http://localhost:3000> and enter your Steam vanity name,
+SteamID64, or profile URL.
+
+The `crossover_cache` volume keeps the lookup cache across container
+restarts. Drop the `-v` flag if you don't care about persistence.
+
+## Configuration
+
+| Variable | Required | Default | Notes |
+| --- | --- | --- | --- |
+| `STEAM_API_KEY` | yes | &mdash; | Get one at <https://steamcommunity.com/dev/apikey> |
+| `PORT` | no | `3000` | Port the server listens on |
+
+When running from source, these can also be supplied via a `.env` file
+(see `.env.example`).
+
+## Run from source
+
+Skip the container if you'd rather run it natively. Requires Node.js
+18+ (for built-in `fetch`).
 
 ```bash
 npm install
@@ -37,72 +89,86 @@ npm start
 
 Then open <http://localhost:3000>.
 
-## Running in a container
+## How the lookup works
 
-The image is plain OCI and works with **Docker** as well as Apple's new
-**`container`** CLI (macOS 26+, Apple Silicon).
+CodeWeavers does not publish a public JSON API, so the scraper in
+`lib/crossover.js` does the following per game:
 
-### Build
+1. Fetches the search page
+   `https://www.codeweavers.com/compatibility?name=<game>`.
+2. Extracts hit links matching `/compatibility/crossover/<slug>`.
+3. Picks the closest match using exact / substring / token-overlap
+   scoring against the Steam-side title.
+4. Loads the chosen detail page and reads the headline verdict out of
+   `.appdb-rating-box`.
 
-```bash
-docker build -t crossover-steam-check .
-# or
-container build -t crossover-steam-check .
+Successful lookups are persisted to `.cache/crossover.json`. Entries
+stay fresh for **7 days**; older entries are returned immediately and
+refreshed in the background (stale-while-revalidate). Concurrent
+lookups for the same title are deduplicated. Wipe the cache with
+`rm .cache/crossover.json` or delete the named volume.
+
+### Debugging when CodeWeavers changes its markup
+
+There's a diagnostic endpoint that surfaces every step of the lookup
+for one title:
+
+```
+http://localhost:3000/api/compat/debug?name=The%20Witcher%203
 ```
 
-### Run
+It returns the search HTML head, the parsed candidate list, the chosen
+match, and a probe of the detail page (JSON-LD blocks, rating-related
+class names, image alt/src values, and text snippets around rating
+words). Usually enough to spot which selector in `parseSearchResults`
+or `parseAppPage` needs updating.
 
-```bash
-docker run --rm -p 3000:3000 \
-  -e STEAM_API_KEY=your_key_here \
-  -v crossover_cache:/app/.cache \
-  crossover-steam-check
-```
+## API
 
-With Apple's `container` CLI, identical syntax:
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/library?user=<vanity\|steamid64\|profile-url>` | Resolves and returns the user's owned games |
+| `GET` | `/api/compat?name=<game-name>` | CrossOver verdict for a single title |
+| `GET` | `/api/compat/debug?name=<game-name>` | Diagnostic dump (see above) |
 
-```bash
-container run --rm -p 3000:3000 \
-  -e STEAM_API_KEY=your_key_here \
-  -v crossover_cache:/app/.cache \
-  crossover-steam-check
-```
+## Troubleshooting
 
-The `crossover_cache` volume (or a bind mount of your choice) preserves
-the lookup cache across container restarts.
+**`STEAM_API_KEY is not configured`** &mdash; the server didn't see the
+variable. In a container, double-check the `-e STEAM_API_KEY=...`
+flag. From source, make sure `.env` exists in the project root and
+the server was restarted after editing it.
 
-## How the CrossOver lookup works
+**`No games returned. Make sure your Steam profile and game details
+are set to Public.`** &mdash; both *My profile* and *Game details* under
+Steam Privacy need to be *Public*. *Friends only* is not enough.
 
-CodeWeavers does not publish an official JSON API. The scraper in
-`lib/crossover.js`:
+**Most games show as "Unknown"** &mdash; the scraper is finding entries
+but failing to read the verdict, usually because CodeWeavers changed
+the page markup. Hit the debug endpoint above and open an issue with
+the JSON output.
 
-1. fetches the search page
-   `https://www.codeweavers.com/compatibility?name=<game>`,
-2. extracts hit links (`/compatibility/crossover/<slug>`),
-3. picks the closest match (exact / substring / token overlap),
-4. loads the detail page and extracts the verdict from
-   `.appdb-rating-box` (Runs Great / Runs Well / Limited Functionality
-   / Won't Run / Untested).
+**`[crossover] /app/.cache is not writable`** &mdash; the mounted volume
+isn't writable by the container. The image runs as root by default to
+sidestep this on Apple's `container` (which provisions named volumes
+as root-owned). If you've customized the container user, either fix
+the volume's owner or drop the `-v` flag (cache will then be
+in-memory only and the app keeps working).
 
-Results are persisted in `.cache/crossover.json`. Entries are
-considered fresh for 7 days; older entries are served from the cache
-immediately and refreshed in parallel in the background
-(stale-while-revalidate). Concurrent requests for the same title are
-deduplicated. Clear the cache with `rm .cache/crossover.json`.
-
-If the page markup changes, the selectors in `parseSearchResults` /
-`parseAppPage` are intentionally loose — usually a small patch there
-is enough.
-
-## Endpoints
-
-- `GET /api/library?user=<vanity|steamid64|profile-url>` → game list
-- `GET /api/compat?name=<game-name>` → `{ rating, label, source, matchedName }`
-- `GET /api/compat/debug?name=<game-name>` → diagnostic dump (search
-  HTML head, parsed candidates, chosen match, app-page probe) for
-  reverse-engineering selectors when CodeWeavers' markup changes
+**`Password authentication is not supported`** when cloning &mdash;
+GitHub disabled HTTPS password auth in 2021. Use a Personal Access
+Token, the `gh` CLI (`gh auth login`), or SSH keys.
 
 ## Disclaimer
 
-This app is not affiliated with Valve, Steam, or CodeWeavers. It only
-uses publicly accessible endpoints / the public compatibility pages.
+This project is not affiliated with Valve, Steam, or CodeWeavers. It
+uses Steam's public Web API and scrapes the public CodeWeavers
+compatibility pages. The built-in 7-day cache is there to be a good
+citizen &mdash; please don't tear it out.
+
+## License
+
+No license file is included yet. Until one is added, default copyright
+applies (all rights reserved) and the project cannot legally be
+forked, redistributed, or contributed to. Add a `LICENSE` file (MIT
+and Apache-2.0 are both safe choices for small open-source projects)
+before publishing the repo if you want contributions.
